@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+      - name: flask-app-container
+        image: abdoukolley/devps_project:1.0
+        ports:
+        - containerPort: 5000
+        resources:
+      limits:
+        cpu: "1"
+        memory: "500Mi"
+      requests:
+        cpu: "0.5"
+        memory: "200Mi"
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+
+---
+kind: Service
+metadata:
+  name: flask-app-service
+spec:
+  template:
+    metadata:
+      labels:
+        app: flask-app
+  selector:
+    app: flask-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: ClusterIP
+
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: Docker@2
+  inputs:
+    containerRegistry: 'Docker' 
+    repository: 'abdoukolley/devps_project' 
+    Dockerfile: 'Dockerfile' 
